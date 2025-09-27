@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Sentiment Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .input-section {
+            margin-bottom: 30px;
+        }
+        
+        .input-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .text-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .result-positive {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+        
+        .result-negative {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+        }
+        
+        .result-neutral {
+            background: linear-gradient(135deg, #9E9E9E 0%, #757575 100%);
+            color: white;
+        }
+        
+        .result-content {
+            text-align: center;
+        }
+        
+        .sentiment-label {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .confidence-score {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .examples-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .examples-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .example-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .example-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .example-text {
+            font-style: italic;
+            margin-bottom: 5px;
+        }
+        
+        .example-expected {
+            font-weight: bold;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Customer Sentiment Analysis</h1>
+            <p>Powered by Machine Learning & Natural Language Processing</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-section">
+                <h2>Enter Customer Review</h2>
+                <textarea id="reviewInput" class="text-input" placeholder="Type or paste a customer review here to analyze its sentiment..."></textarea>
+                
+                <div class="button-group">
+                    <button id="analyzeBtn" class="btn btn-primary">Analyze Sentiment</button>
+                    <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                </div>
+            </div>
+            
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Analyzing sentiment...</p>
+            </div>
+            
+            <div id="errorMessage" class="error-message"></div>
+            
+            <div id="resultSection" class="result-section">
+                <div class="result-content">
+                    <div id="sentimentLabel" class="sentiment-label"></div>
+                    <div id="confidenceScore" class="confidence-score"></div>
+                </div>
+            </div>
+            
+            <div class="examples-section">
+                <h3>📋 Try These Examples</h3>
+                <div id="examplesContainer">
+                    <!-- Examples will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const reviewInput = document.getElementById('reviewInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loading = document.getElementById('loading');
+        const resultSection = document.getElementById('resultSection');
+        const sentimentLabel = document.getElementById('sentimentLabel');
+        const confidenceScore = document.getElementById('confidenceScore');
+        const errorMessage = document.getElementById('errorMessage');
+        const examplesContainer = document.getElementById('examplesContainer');
+
+        // Load examples
+        async function loadExamples() {
+            try {
+                const response = await fetch('/test_examples');
+                const data = await response.json();
+                
+                examplesContainer.innerHTML = '';
+                data.examples.forEach(example => {
+                    const exampleDiv = document.createElement('div');
+                    exampleDiv.className = 'example-item';
+                    exampleDiv.innerHTML = `
+                        <div class="example-text">"${example.text}"</div>
+                        <div class="example-expected">Expected: ${example.expected}</div>
+                    `;
+                    exampleDiv.addEventListener('click', () => {
+                        reviewInput.value = example.text;
+                        analyzeSentiment();
+                    });
+                    examplesContainer.appendChild(exampleDiv);
+                });
+            } catch (error) {
+                console.error('Error loading examples:', error);
+            }
+        }
+
+        // Analyze sentiment
+        async function analyzeSentiment() {
+            const text = reviewInput.value.trim();
+            
+            if (!text) {
+                showError('Please enter a review to analyze.');
+                return;
+            }
+            
+            // Show loading state
+            showLoading(true);
+            hideError();
+            hideResult();
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(data);
+                } else {
+                    showError(data.error || 'An error occurred during analysis.');
+                }
+            } catch (error) {
+                showError('Network error. Please try again.');
+                console.error('Error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Show result
+        function showResult(data) {
+            sentimentLabel.textContent = data.sentiment;
+            confidenceScore.textContent = `Confidence: ${(data.confidence * 100).toFixed(1)}%`;
+            
+            // Update result section styling based on sentiment
+            resultSection.className = 'result-section';
+            if (data.sentiment === 'Positive') {
+                resultSection.classList.add('result-positive');
+            } else if (data.sentiment === 'Negative') {
+                resultSection.classList.add('result-negative');
+            } else {
+                resultSection.classList.add('result-neutral');
+            }
+            
+            resultSection.style.display = 'block';
+        }
+
+        // Hide result
+        function hideResult() {
+            resultSection.style.display = 'none';
+        }
+
+        // Show loading
+        function showLoading(show) {
+            loading.style.display = show ? 'block' : 'none';
+            analyzeBtn.disabled = show;
+        }
+
+        // Show error
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        // Hide error
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+
+        // Clear input
+        function clearInput() {
+            reviewInput.value = '';
+            hideResult();
+            hideError();
+            reviewInput.focus();
+        }
+
+        // Event listeners
+        analyzeBtn.addEventListener('click', analyzeSentiment);
+        clearBtn.addEventListener('click', clearInput);
+        
+        reviewInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                analyzeSentiment();
+            }
+        });
+
+        // Initialize
+        loadExamples();
+        reviewInput.focus();
+    </script>
+</body>
+</html>
