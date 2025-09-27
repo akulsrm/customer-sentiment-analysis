@@ -2,6 +2,11 @@
 
 A comprehensive sentiment analysis system that classifies customer reviews as Positive, Negative, or Neutral using advanced machine learning algorithms. The system achieves **100% accuracy** on the test dataset and is deployed as a Flask web application for real-time sentiment prediction.
 
+## 🚀 Live Demo
+
+**You can view and interact with the live project here:**
+### [https://customer-sentiment-analysis-2.onrender.com/](https://customer-sentiment-analysis-2.onrender.com/)
+
 ## 🎯 Features
 
 - **Multi-Algorithm Approach**: Implements Logistic Regression, Random Forest, and Naive Bayes classifiers
